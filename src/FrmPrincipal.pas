@@ -1,0 +1,404 @@
+unit FrmPrincipal;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, GIFImage, ExtCtrls, ComCtrls, Buttons, ZLibComperssion,
+  TZip, AbMeter, AbBase, AbBrowse, AbZBrows, AbZipper;
+
+type
+  TfrmMain = class(TForm)
+    Label1: TLabel;
+    edtFuente: TEdit;
+    btnFuente: TButton;
+    Label3: TLabel;
+    btnBackup: TButton;
+    btnCerrar: TButton;
+    Image1: TImage;
+    Label2: TLabel;
+    edtDestino: TEdit;
+    btnDestino: TButton;
+    Label4: TLabel;
+    mComment: TMemo;
+    tvwFiles: TTreeView;
+    btnVerFuente: TBitBtn;
+    btnVerDestino: TBitBtn;
+    Label5: TLabel;
+    GroupBox1: TGroupBox;
+    AbZipper1: TAbZipper;
+    chkCompress: TCheckBox;
+    AbMeterAllProgress: TAbMeter;
+    AbMeterFileProgress: TAbMeter;
+    meterAllProgress: TAbVCLMeterLink;
+    meterFileProgress: TAbVCLMeterLink;
+    lblFile: TLabel;
+    lblItem: TLabel;
+    procedure btnCerrarClick(Sender: TObject);
+    procedure btnBackupClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure btnFuenteClick(Sender: TObject);
+    procedure tvwFilesDeletion(Sender: TObject; Node: TTreeNode);
+    procedure tvwFilesExpanding(Sender: TObject; Node: TTreeNode;
+      var AllowExpansion: Boolean);
+    procedure tvwFilesGetImageIndex(Sender: TObject; Node: TTreeNode);
+    procedure tvwFilesGetSelectedIndex(Sender: TObject; Node: TTreeNode);
+    procedure btnDestinoClick(Sender: TObject);
+    procedure btnVerFuenteClick(Sender: TObject);
+    procedure btnVerDestinoClick(Sender: TObject);
+    procedure tvwFilesDblClick(Sender: TObject);
+    procedure chkCompressClick(Sender: TObject);
+    procedure Label5Click(Sender: TObject);
+  private
+    { Private declarations }
+    sourceFolderPath : String;
+    targetFolderPath: String;
+    name : string;
+    compress: Boolean;
+    listaFicheros : TStringList;
+
+    function GetLocalT: String;
+    function CambiaEn(Cadena, Esto, Por: String): String;
+    function CopiaTodo(Origen,Destino : String) : LongInt;
+
+    procedure ReadFiles(Node: TTreeNode; Folder: String);
+    procedure GetSystemImages;
+    procedure FindFiles(StartDir, FileMask: string; recursively: boolean; var FilesList: TStringList);
+  public
+    { Public declarations }
+  end;
+
+var
+  frmMain: TfrmMain;
+
+implementation
+
+{$R *.dfm}
+
+uses StrUtils, ShlObj, ShellApi, IniFiles, CommCtrl, FileCtrl, ZLib, FrmWait;
+
+procedure TfrmMain.btnCerrarClick(Sender: TObject);
+var
+  i :  integer;
+begin
+  self.Close;
+end;
+
+function TfrmMain.GetLocalT: String;
+var 
+   stSystemTime : TSystemTime;
+   temp : string;
+   dd,mm,aa, hh: string;
+begin
+   Windows.GetLocalTime( stSystemTime );
+
+   temp := DateTimeToStr( SystemTimeToDateTime( stSystemTime ) );
+   dd := Copy(temp, 1, 2);
+   mm := Copy(temp, 4, 2);
+   aa := Copy(temp, 7, 4);
+   hh := Copy(temp, 12, Length(temp) - 11);
+   Result := aa + '.' + mm + '.' + dd + ' - ' + hh;
+   Result := CambiaEn(Result,':','.');
+end;
+
+function TfrmMain.CambiaEn(Cadena, Esto, Por: String): String;
+var
+  aPos: Integer;
+begin
+    aPos := Pos(Esto, Cadena);
+    Result:= '';
+    while (aPos <> 0) do begin
+      Result := Result + Copy(Cadena, 1, aPos-1) + Por;
+      Delete(Cadena, 1, aPos + Length(Esto)-1);
+      aPos := Pos(Esto, Cadena);
+    end;
+    Result := Result+Cadena;
+end;
+
+function TfrmMain.CopiaTodo(Origen, Destino: String): LongInt;
+var
+  SHFileOpStruct : TSHFileOpStruct;
+begin
+  if FileExists(Origen) = false then
+  begin
+    FillChar(SHFileOpStruct,SizeOf(TSHFileOpStruct),#0);
+    with SHFileOpStruct do
+    begin
+      Wnd:=Application.Handle;
+      wFunc:=FO_COPY;
+      fFlags:=FOF_ALLOWUNDO;
+      hNameMappings:=nil;
+      pFrom:=PChar(Origen+#0+#0);
+      pTo:=PChar(Destino+#0+#0);
+    end;
+  ShFileOperation(SHFileOpStruct);
+ end;
+end;
+
+procedure TfrmMain.btnBackupClick(Sender: TObject);
+var
+ Ini: TIniFile;
+ i : integer;
+ listaFiles : TStringList;
+ origDir: string;
+begin
+  Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
+  try
+    Ini.WriteString( 'Data', 'Source', edtFuente.Text);
+    Ini.WriteString( 'Data', 'Target', edtDestino.Text);
+  finally
+    Ini.Free;
+  end;
+
+  sourceFolderPath := edtFuente.Text;
+  targetFolderPath := edtDestino.Text;
+  if (compress = false) then
+  begin
+    CopiaTodo(sourceFolderPath, targetFolderPath);
+  end
+    else
+  begin
+    //listaFiles := TStringList.Create();
+    origDir :=  sourceFolderPath;
+    Delete(origDir,Length(origDir) - 2,3);
+    //self.FindFiles(origDir,'*.*',true,listaFiles);
+    AbZipper1.FileName := targetFolderPath + '.zip';
+    AbZipper1.BaseDirectory := origDir;
+    AbZipper1.AddFiles('*.*',0);
+    AbZipper1.Save;
+  end;
+  if ((mComment.Lines.Count > 0) and (Self.compress = false))then
+  begin
+    mComment.Lines.SaveToFile(targetFolderPath + '\Leeme.txt');
+  end;
+  MessageDlg('Los ficheros y carpetas de: ' + sourceFolderPath + ' se han copiado satisfactoriamente para: ' + targetFolderPath,mtInformation,[mbOK],1);
+end;
+
+procedure TfrmMain.FormCreate(Sender: TObject);
+var
+  Ini: TIniFile;
+begin
+  AbMeterAllProgress.Visible := false;
+  AbMeterFileProgress.Visible := false;
+  Self.listaFicheros := TStringList.Create();
+  GetSystemImages();
+
+  Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
+  try
+    edtFuente.Text  := Ini.ReadString( 'Data', 'Source', '');
+    edtDestino.Text := Ini.ReadString( 'Data', 'Target', '' );
+    sourceFolderPath := edtFuente.Text;
+    edtFuente.Text := self.sourceFolderPath;
+    compress := false;
+    chkCompress.Checked := compress;
+
+    ReadFiles(nil,LeftStr(edtFuente.Text,Length(edtFuente.Text)-3));
+  finally
+    Ini.Free;
+  end;
+end;
+
+procedure TfrmMain.btnFuenteClick(Sender: TObject);
+begin
+  if SelectDirectory('Seleccionar carpeta Fuente', '', sourceFolderPath) then
+  begin
+    tvwFiles.Items.Clear;
+  	ReadFiles(nil, IncludeTrailingPathDelimiter(sourceFolderPath));
+    edtFuente.Text := sourceFolderPath + '\*.*';
+  end;
+end;
+
+procedure TfrmMain.ReadFiles(Node: TTreeNode; Folder: String);
+var
+  SearchRec: TSearchRec;
+  Child: TTreeNode;
+  Data: PChar;
+
+begin
+  if FindFirst(Folder + '*.*', faAnyFile, SearchRec) = 0 then
+  begin
+    tvwFiles.Items.BeginUpdate;
+    repeat
+      if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
+      begin
+        Child := tvwFiles.Items.AddChild(Node, SearchRec.Name);
+        listaFicheros.Add(child.Text);
+        // si es un directorio, guardamos la ruta completa en Data
+        if SearchRec.Attr and faDirectory = faDirectory then
+        begin
+          GetMem(Data, Length(Folder + SearchRec.Name + '\') + 1);
+          StrPCopy(Data, Folder + SearchRec.Name + '\');
+
+          Child.Data := Data;
+          Child.HasChildren := true;
+        end;
+      end;
+    until FindNext(SearchRec) <> 0;
+
+    tvwFiles.Items.EndUpdate;
+  end;
+end;
+
+procedure TfrmMain.tvwFilesDeletion(Sender: TObject; Node: TTreeNode);
+begin
+  if Assigned(Node.Data) then
+    FreeMem(Node.Data);
+end;
+
+procedure TfrmMain.tvwFilesExpanding(Sender: TObject; Node: TTreeNode;
+  var AllowExpansion: Boolean);
+begin
+if Node.Count = 0 then
+  begin
+    ReadFiles(Node, PChar(Node.Data));
+    Node.HasChildren := Node.Count <> 0;
+  end;
+end;
+
+procedure TfrmMain.tvwFilesGetImageIndex(Sender: TObject; Node: TTreeNode);
+const
+  shgfiFlags = SHGFI_SYSICONINDEX or SHGFI_USEFILEATTRIBUTES;
+
+var
+  ShFileInfo: TShFileInfo;
+
+begin
+  if Assigned(Node.Data) then
+    ShGetFileInfo('', faDirectory, ShFileInfo, SizeOf(ShFileInfo), shgfiFlags)
+  else
+    ShGetFileInfo(PChar(Node.Text), 0, ShFileInfo, SizeOf(ShFileInfo), shgfiFlags);
+
+  Node.ImageIndex := ShFileInfo.iIcon;
+end;
+
+procedure TfrmMain.tvwFilesGetSelectedIndex(Sender: TObject;
+  Node: TTreeNode);
+const
+  shgfiFlags = SHGFI_SYSICONINDEX or SHGFI_USEFILEATTRIBUTES or SHGFI_OPENICON;
+
+var
+  ShFileInfo: TShFileInfo;
+
+begin
+  if Assigned(Node.Data) then
+    ShGetFileInfo('', faDirectory, ShFileInfo, SizeOf(ShFileInfo), shgfiFlags)
+  else
+    ShGetFileInfo(PChar(Node.Text), 0, ShFileInfo, SizeOf(ShFileInfo), shgfiFlags);
+
+  Node.SelectedIndex := ShFileInfo.iIcon;
+end;
+
+procedure TfrmMain.GetSystemImages;
+const
+  shgfiFlags = SHGFI_SYSICONINDEX or SHGFI_SMALLICON;
+
+var
+  ShFileInfo: TShFileInfo;
+  iSmall: Cardinal;
+
+begin
+  iSmall := ShGetFileInfo('', 0, ShFileInfo, SizeOf(ShFileInfo), shgfiFlags);
+  TreeView_SetImageList(tvwFiles.Handle, iSmall, LVSIL_NORMAL);
+end;
+
+procedure TfrmMain.btnDestinoClick(Sender: TObject);
+begin
+  if SelectDirectory('Seleccionar carpeta Destino', '', targetFolderPath) then
+  begin
+    edtDestino.Text := targetFolderPath + '\' + GetLocalT;
+  end;
+end;
+
+procedure TfrmMain.btnVerFuenteClick(Sender: TObject);
+begin
+  ShellExecute(0, 'explore', nil, nil, PChar(edtFuente.Text), SW_SHOW);
+end;
+
+procedure TfrmMain.btnVerDestinoClick(Sender: TObject);
+begin
+  ShellExecute(0, 'explore', nil, nil, PChar(edtDestino.Text), SW_SHOW);
+end;
+
+procedure TfrmMain.tvwFilesDblClick(Sender: TObject);
+var
+ dir : string;
+begin
+  dir := LeftStr(sourceFolderPath,length(sourceFolderPath) - 3) + tvwFiles.Selected.Text;
+  ShellExecute(Handle,'Open',PChar(dir),nil,nil,SW_SHOW);
+end;
+
+procedure TfrmMain.chkCompressClick(Sender: TObject);
+begin
+  compress := chkCompress.Checked;
+  if (compress = true ) then
+  begin
+    AbMeterAllProgress.Visible := true;
+    AbMeterFileProgress.Visible := true;
+    lblItem.Visible := true;
+    lblFile.Visible := true;
+  end
+  else
+  begin
+    AbMeterAllProgress.Visible := false;
+    AbMeterFileProgress.Visible := false;
+    lblItem.Visible := false;
+    lblFile.Visible := false;
+  end;
+end;
+
+procedure TfrmMain.FindFiles(StartDir, FileMask: string; recursively: boolean; var FilesList: TStringList);
+  const
+    MASK_ALL_FILES = '*.*';
+    CHAR_POINT = '.';
+  var
+    SR: TSearchRec;
+    DirList: TStringList;
+    IsFound: Boolean;
+    i: integer;
+  begin
+    if (StartDir[length(StartDir)] <> '\') then begin
+      StartDir := StartDir + '\';
+    end;
+
+    // Crear la lista de ficheos en el directorio StartDir (no directorios!)
+    IsFound := FindFirst(StartDir + FileMask, faAnyFile - faDirectory, SR) = 0;
+    // MIentras encuentre
+    while IsFound do  begin
+      FilesList.Add(StartDir + SR.Name);
+      IsFound := FindNext(SR) = 0;
+    end;
+  
+    FindClose(SR);
+  
+    // Recursivo?
+    if (recursively) then begin
+      // Build a list of subdirectories
+      DirList := TStringList.Create;
+      // proteccion
+      try
+        IsFound := FindFirst(StartDir + MASK_ALL_FILES, faAnyFile, SR) = 0;
+        while IsFound do
+        begin
+          if ((SR.Attr and faDirectory) <> 0) and
+            (SR.Name[1] <> CHAR_POINT) then
+            DirList.Add(StartDir + SR.Name);
+          IsFound := FindNext(SR) = 0;
+        end;
+        FindClose(SR);
+  
+        // Scan the list of subdirectories
+        for i := 0 to DirList.Count - 1 do
+          FindFiles(DirList[i], FileMask, recursively, FilesList);
+      finally
+        DirList.Free;
+      end;
+    end;
+  end;
+
+
+procedure TfrmMain.Label5Click(Sender: TObject);
+begin
+  ShowMessage('Credo por Lazaro Bustio - lbustio@yahoo.es');
+end;
+
+end.
