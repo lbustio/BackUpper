@@ -23,7 +23,7 @@ Este proyecto es una aplicación de escritorio desarrollada en Delphi que permit
 
 1. Clona este repositorio en tu máquina local:
    ```bash
-   git clone https://github.com/tu_usuario/backup-compression-utility.git
+   git clone https://github.com/lbustio/BackUpper.git
    ```
 2. Abre el proyecto en Delphi.
 
