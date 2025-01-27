@@ -3,7 +3,9 @@ program Backupper;
 uses
   Forms,
   FrmPrincipal in 'FrmPrincipal.pas' {frmMain},
-  frmWait in 'frmWait.pas' {frmEspera};
+  frmWait in 'frmWait.pas' {frmEspera},
+  TUtils in 'TUtils.pas',
+  TNodeData in 'TNodeData.pas';
 
 {$R *.res}
 

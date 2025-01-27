@@ -1,27 +1,26 @@
 object frmMain: TfrmMain
-  Left = 174
-  Top = 117
+  Left = 98
+  Top = 99
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Backupper'
-  ClientHeight = 530
-  ClientWidth = 674
+  ClientHeight = 597
+  ClientWidth = 772
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
+  Position = poDesigned
   OnCreate = FormCreate
-  PixelsPerInch = 96
-  TextHeight = 13
-  object Label1: TLabel
-    Left = 187
-    Top = 8
-    Width = 44
-    Height = 13
-    Caption = 'Fuente:'
+  TextHeight = 14
+  object lblSource: TLabel
+    Left = 245
+    Top = 13
+    Width = 40
+    Height = 14
+    Caption = 'Origen:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -30,11 +29,11 @@ object frmMain: TfrmMain
     ParentFont = False
   end
   object Label3: TLabel
-    Left = 182
-    Top = 32
-    Width = 158
-    Height = 13
-    Caption = 'Lista de Carpetas/Ficheros:'
+    Left = 246
+    Top = 40
+    Width = 152
+    Height = 14
+    Caption = 'Lista de Carpetas/Archivos:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -42,11 +41,11 @@ object frmMain: TfrmMain
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Image1: TImage
-    Left = 1
-    Top = 3
-    Width = 176
-    Height = 526
+  object ImgBanner: TImage
+    Left = 8
+    Top = 8
+    Width = 225
+    Height = 586
     Picture.Data = {
       0954474946496D6167654749463837619E00C201F70000000000800000008000
       808000000080800080008080C0C0C0C0DCC0A6CAF0FFFFFFFFFFE6F7FFF3F0F7
@@ -254,11 +253,11 @@ object frmMain: TfrmMain
       A39FAD3E7640003B}
     Stretch = True
   end
-  object Label2: TLabel
-    Left = 183
-    Top = 408
-    Width = 48
-    Height = 13
+  object lblDestino: TLabel
+    Left = 241
+    Top = 425
+    Width = 45
+    Height = 14
     Caption = 'Destino:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -268,10 +267,10 @@ object frmMain: TfrmMain
     ParentFont = False
   end
   object Label4: TLabel
-    Left = 185
-    Top = 283
+    Left = 241
+    Top = 293
     Width = 68
-    Height = 13
+    Height = 14
     Caption = 'Comentario:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -280,197 +279,162 @@ object frmMain: TfrmMain
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label5: TLabel
-    Left = 406
-    Top = 507
-    Width = 31
-    Height = 13
-    Cursor = crHandPoint
-    Caption = 'Autor'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold, fsUnderline]
-    ParentFont = False
-    OnClick = Label5Click
-  end
-  object edtFuente: TEdit
-    Left = 232
-    Top = 5
-    Width = 375
-    Height = 21
+  object edtSource: TEdit
+    Left = 291
+    Top = 8
+    Width = 383
+    Height = 22
     TabOrder = 0
   end
-  object btnFuente: TButton
-    Left = 611
-    Top = 3
-    Width = 25
+  object btnSource: TButton
+    Left = 680
+    Top = 8
+    Width = 39
     Height = 25
+    Hint = 'Seleccionar origen'
     Caption = '...'
+    Default = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 1
-    OnClick = btnFuenteClick
+    OnClick = btnSourceClick
   end
   object btnBackup: TButton
-    Left = 594
-    Top = 499
+    Left = 591
+    Top = 564
     Width = 75
     Height = 25
+    Hint = 'Realizr backup'
     Caption = 'Backup!'
+    Default = True
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 2
-    OnClick = btnBackupClick
   end
-  object btnCerrar: TButton
-    Left = 508
-    Top = 500
+  object btnExit: TButton
+    Left = 689
+    Top = 564
     Width = 75
     Height = 25
-    Caption = 'Cerrar'
+    Hint = 'Salir de la aplicaci'#243'n'
+    Caption = 'Salir'
+    Default = True
+    ModalResult = 8
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 3
-    OnClick = btnCerrarClick
+    OnClick = btnExitClick
   end
-  object edtDestino: TEdit
-    Left = 232
-    Top = 405
-    Width = 367
-    Height = 21
+  object edtDestination: TEdit
+    Left = 292
+    Top = 422
+    Width = 382
+    Height = 22
     TabOrder = 4
   end
-  object btnDestino: TButton
-    Left = 603
-    Top = 402
-    Width = 25
+  object btnDestination: TButton
+    Left = 680
+    Top = 421
+    Width = 39
     Height = 25
+    Hint = 'Seleccionar destino'
     Caption = '...'
+    Default = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 5
-    OnClick = btnDestinoClick
+    OnClick = btnDestinationClick
   end
   object mComment: TMemo
-    Left = 182
-    Top = 297
-    Width = 489
+    Left = 241
+    Top = 313
+    Width = 523
     Height = 96
-    Color = clWhite
+    BevelKind = bkTile
+    Color = clCream
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
     Font.Name = 'Courier New'
     Font.Style = []
+    Lines.Strings = (
+      'Sin comentarios')
     ParentFont = False
     ScrollBars = ssVertical
     TabOrder = 6
   end
   object tvwFiles: TTreeView
-    Left = 182
-    Top = 48
-    Width = 489
-    Height = 233
+    Left = 241
+    Top = 63
+    Width = 523
+    Height = 224
     AutoExpand = True
+    Images = imgList
     Indent = 19
     ReadOnly = True
     TabOrder = 7
     OnDblClick = tvwFilesDblClick
-    OnDeletion = tvwFilesDeletion
     OnExpanding = tvwFilesExpanding
-    OnGetImageIndex = tvwFilesGetImageIndex
-    OnGetSelectedIndex = tvwFilesGetSelectedIndex
   end
-  object btnVerFuente: TBitBtn
-    Left = 641
-    Top = 3
-    Width = 36
+  object btnOpenSource: TBitBtn
+    Left = 725
+    Top = 8
+    Width = 39
     Height = 25
+    Hint = 'Abrir carpeta de origen'
     Caption = 'Ver'
+    Default = True
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 8
-    OnClick = btnVerFuenteClick
+    OnClick = btnOpenSourceClick
   end
-  object btnVerDestino: TBitBtn
-    Left = 633
-    Top = 402
-    Width = 36
+  object btnOpenDestination: TBitBtn
+    Left = 725
+    Top = 421
+    Width = 39
     Height = 25
+    Hint = 'Abrir capeta destino'
     Caption = 'Ver'
+    Default = True
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 9
-    OnClick = btnVerDestinoClick
+    OnClick = btnOpenDestinationClick
   end
-  object GroupBox1: TGroupBox
-    Left = 182
-    Top = 432
-    Width = 489
-    Height = 65
+  object GbCompress: TGroupBox
+    Left = 239
+    Top = 464
+    Width = 525
+    Height = 94
     Caption = 'Opciones de compresion'
     TabOrder = 10
-    object AbMeterAllProgress: TAbMeter
-      Left = 176
-      Top = 17
-      Width = 305
-      Height = 16
-      Orientation = moHorizontal
-      UnusedColor = clBtnFace
-      UsedColor = clNavy
-    end
-    object AbMeterFileProgress: TAbMeter
-      Left = 176
-      Top = 37
-      Width = 305
-      Height = 16
-      Orientation = moHorizontal
-      UnusedColor = clBtnFace
-      UsedColor = clNavy
-    end
-    object lblFile: TLabel
-      Left = 137
-      Top = 18
-      Width = 35
-      Height = 13
-      Caption = 'Fichero'
-    end
-    object lblItem: TLabel
-      Left = 152
-      Top = 38
-      Width = 19
-      Height = 13
-      Caption = 'item'
-    end
     object chkCompress: TCheckBox
-      Left = 8
-      Top = 16
+      Left = 3
+      Top = 30
       Width = 128
       Height = 17
+      Hint = 'Comprimir los archivos de origen'
       Caption = 'Comprimir usando ZIP'
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 0
-      OnClick = chkCompressClick
     end
   end
-  object AbZipper1: TAbZipper
-    ArchiveProgressMeter = meterAllProgress
-    ItemProgressMeter = meterFileProgress
-    AutoSave = True
-    DOSMode = False
-    StoreOptions = [soRemoveDots, soRecurse, soFreshen, soReplace]
-    Left = 182
-    Top = 496
-  end
-  object meterAllProgress: TAbVCLMeterLink
-    Meter = AbMeterAllProgress
-    Left = 214
-    Top = 496
-  end
-  object meterFileProgress: TAbVCLMeterLink
-    Meter = AbMeterFileProgress
-    Left = 246
-    Top = 496
+  object imgList: TImageList
+    Left = 16
+    Top = 16
   end
 end

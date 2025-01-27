@@ -4,19 +4,18 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, GIFImage, ExtCtrls, ComCtrls, Buttons, ZLibComperssion,
-  TZip, AbMeter, AbBase, AbBrowse, AbZBrows, AbZipper;
+  Dialogs, StdCtrls, ExtCtrls, ComCtrls, Buttons, Vcl.Imaging.GIFImg;
 
 type
   TfrmMain = class(TForm)
-    Label1: TLabel;
+    lblSource: TLabel;
     edtFuente: TEdit;
     btnFuente: TButton;
     Label3: TLabel;
     btnBackup: TButton;
     btnCerrar: TButton;
-    Image1: TImage;
-    Label2: TLabel;
+    ImgBanner: TImage;
+    lblDestino: TLabel;
     edtDestino: TEdit;
     btnDestino: TButton;
     Label4: TLabel;
@@ -24,14 +23,8 @@ type
     tvwFiles: TTreeView;
     btnVerFuente: TBitBtn;
     btnVerDestino: TBitBtn;
-    Label5: TLabel;
-    GroupBox1: TGroupBox;
-    AbZipper1: TAbZipper;
+    GbCompress: TGroupBox;
     chkCompress: TCheckBox;
-    AbMeterAllProgress: TAbMeter;
-    AbMeterFileProgress: TAbMeter;
-    meterAllProgress: TAbVCLMeterLink;
-    meterFileProgress: TAbVCLMeterLink;
     lblFile: TLabel;
     lblItem: TLabel;
     procedure btnCerrarClick(Sender: TObject);
@@ -162,10 +155,10 @@ begin
     origDir :=  sourceFolderPath;
     Delete(origDir,Length(origDir) - 2,3);
     //self.FindFiles(origDir,'*.*',true,listaFiles);
-    AbZipper1.FileName := targetFolderPath + '.zip';
-    AbZipper1.BaseDirectory := origDir;
-    AbZipper1.AddFiles('*.*',0);
-    AbZipper1.Save;
+    //AbZipper1.FileName := targetFolderPath + '.zip';
+    //AbZipper1.BaseDirectory := origDir;
+    //AbZipper1.AddFiles('*.*',0);
+    //AbZipper1.Save;
   end;
   if ((mComment.Lines.Count > 0) and (Self.compress = false))then
   begin
@@ -178,8 +171,8 @@ procedure TfrmMain.FormCreate(Sender: TObject);
 var
   Ini: TIniFile;
 begin
-  AbMeterAllProgress.Visible := false;
-  AbMeterFileProgress.Visible := false;
+  //AbMeterAllProgress.Visible := false;
+  //AbMeterFileProgress.Visible := false;
   Self.listaFicheros := TStringList.Create();
   GetSystemImages();
 
@@ -332,15 +325,15 @@ begin
   compress := chkCompress.Checked;
   if (compress = true ) then
   begin
-    AbMeterAllProgress.Visible := true;
-    AbMeterFileProgress.Visible := true;
+    //AbMeterAllProgress.Visible := true;
+    //AbMeterFileProgress.Visible := true;
     lblItem.Visible := true;
     lblFile.Visible := true;
   end
   else
   begin
-    AbMeterAllProgress.Visible := false;
-    AbMeterFileProgress.Visible := false;
+    //AbMeterAllProgress.Visible := false;
+    //AbMeterFileProgress.Visible := false;
     lblItem.Visible := false;
     lblFile.Visible := false;
   end;
