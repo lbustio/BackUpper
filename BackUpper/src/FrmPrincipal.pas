@@ -36,7 +36,6 @@ type
     procedure tvwFilesDblClick(Sender: TObject);
   private
     { Private declarations }
-    filesList: TStringList;
     function SelectFolder(const title: string; var selectedPath: string): Boolean;
     procedure ClearTreeView;
     procedure AddNodesToTreeView(rootNode: TTreeNode; directories, files: TList<string>);
@@ -55,7 +54,7 @@ implementation
 {$R *.dfm}
 
 uses
-  TNodeData, IniFiles, ShellApi, ShlObj;
+  TNodeData, IniFiles, ShellApi, ShlObj, System.UITypes;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 var
@@ -72,7 +71,6 @@ begin
   // Asignamos el TImageList al TreeView
   tvwFiles.Images := imgList;  // Asegúrate de que este paso esté presente
 
-  filesList := TStringList.Create();
   try
     // Lee el archivo de configuración
     init := TIniFile.Create(ChangeFileExt(Application.ExeName, '.INI'));
@@ -85,7 +83,7 @@ begin
     end;
   except
     on e: Exception do
-      ShowMessage('Error al cargar la configuración: ' + e.Message);
+      MessageDlg(Format('Error al cargar la configuración: %s', [e.Message]), mtError, [mbOK], 0);
   end;
 end;
 
@@ -96,13 +94,14 @@ begin
   if SelectFolder('Seleccionar carpeta de destino', selectedDir) then
     edtDestination.Text := IncludeTrailingPathDelimiter(selectedDir)
   else
-    ShowMessage('No se seleccionó ninguna carpeta. Intente nuevamente.');
+    MessageDlg('No se seleccionó ninguna carpeta. Intente nuevamente.', mtWarning, [mbOK], 0);
 end;
 
 procedure TfrmMain.btnExitClick(Sender: TObject);
 var
   init: TIniFile;
   i: Integer;
+  errorMsg: string;
 begin
   try
     // Crea o abre el archivo INI
@@ -116,36 +115,30 @@ begin
       init.Free;  // Libera el objeto INI
     end;
 
-    // Liberar los recursos utilizados
-    try
-      // Liberar la memoria de los elementos de 'filesList'
-      if Assigned(filesList) then
+    // Liberar cualquier memoria dinámica que se haya asignado con 'GetMem' para cada directorio
+    for i := 0 to tvwFiles.Items.Count - 1 do
+    begin
+      if Assigned(tvwFiles.Items.Item[i].Data) then
       begin
-        filesList.Clear;  // Limpiar la lista antes de liberar
-        filesList.Free;   // Liberar la memoria ocupada por el TStringList
+        // Liberar memoria solo si Data no es nil
+        TCustomNodeData(tvwFiles.Items.Item[i].Data).Free;
+        tvwFiles.Items.Item[i].Data := nil; // Evitar el uso posterior de un puntero invalidado
       end;
-
-      // Liberar cualquier memoria dinámica que se haya asignado con 'GetMem' para cada directorio
-      for i := 0 to tvwFiles.Items.Count - 1 do
-      begin
-        if Assigned(tvwFiles.Items.Item[i].Data) then
-        begin
-          // Liberar memoria solo si Data no es nil
-          TCustomNodeData(tvwFiles.Items.Item[i].Data).Free;
-          tvwFiles.Items.Item[i].Data := nil; // Evitar el uso posterior de un puntero invalidado
-        end;
-      end;
-    except
-      on e: Exception do
-        ShowMessage('Error al liberar la memoria utilizada. ' + e.Message);
     end;
 
     // Finalmente, cerrar la aplicación
     Self.Close;
-
   except
+    on e: EInOutError do
+    begin
+      errorMsg := 'Error al acceder a los archivos o carpetas durante el cierre. Verifique los permisos.';
+      MessageDlg(errorMsg, mtError, [mbOK], 0);
+    end;
     on e: Exception do
-      ShowMessage('Ocurrió un error inesperado al intentar cerrar la aplicación. ' + e.Message);
+    begin
+      errorMsg := 'Ocurrió un error inesperado al intentar cerrar la aplicación. ' + e.Message;
+      MessageDlg(errorMsg, mtError, [mbOK], 0);
+    end;
   end;
 end;
 
@@ -185,8 +178,8 @@ begin
 
       if DirectoryExists(path) then
       begin
-        directories := TList<string>.Create;
-        files := TList<string>.Create;
+        directories := TList<string>.Create();
+        files := TList<string>.Create();
         try
           if GetDirectoryContents(path, directories, files) then
           begin
@@ -216,11 +209,17 @@ procedure TfrmMain.ClearTreeView;
 var
   i: Integer;
 begin
-  // Liberar memoria y limpiar TreeView
+  // Liberar memoria asociada a los nodos antes de limpiar el TreeView
   for i := 0 to tvwFiles.Items.Count - 1 do
+  begin
     if Assigned(tvwFiles.Items[i].Data) then
-      TCustomNodeData(tvwFiles.Items[i].Data).Free;
+    begin
+      TCustomNodeData(tvwFiles.Items[i].Data).Free; // Liberar los datos asociados al nodo
+      tvwFiles.Items[i].Data := nil;                // Evitar referencias colgantes
+    end;
+  end;
 
+  // Limpiar todos los nodos del TreeView
   tvwFiles.Items.Clear;
 end;
 
@@ -229,7 +228,6 @@ var
   i: Integer;
   childNode: TTreeNode;
   filePath, caption: string;
-  iconIndex: Integer;
 begin
   // Añadir directorios como nodos hijos
   for i := 0 to directories.Count - 1 do
@@ -328,22 +326,25 @@ var
   files: TList<string>;
   dir: string;
   f: string;
-  newDirNode: TTreeNode;
-  newFileNode: TTreeNode;
+  newNode: TTreeNode;
   caption: string;
   path: string;
 begin
+  directories := nil;
+  files := nil;
+
   try
-    // Obtener la ruta del nodo, desreferenciando correctamente
+    // Obtener la ruta del nodo
     nodePath := IncludeTrailingPathDelimiter(TCustomNodeData(Node.Data).Path);
 
-    directories := TList<string>.Create;
-    files := TList<string>.Create;
+    // Crear listas para almacenar directorios y archivos
+    directories := TList<string>.Create();
+    files := TList<string>.Create();
 
-    // Intentar obtener los contenidos del directorio
+    // Intentar obtener el contenido del directorio
     if GetDirectoryContents(nodePath, directories, files) then
     begin
-      // Evitar agregar nodos duplicados
+      // Añadir directorios como nodos hijos
       for dir in directories do
       begin
         path := IncludeTrailingPathDelimiter(dir);
@@ -352,37 +353,60 @@ begin
         // Verificar si el nodo ya existe
         if not NodeHasChild(Node, caption) then
         begin
-          newDirNode := tvwFiles.Items.AddChild(Node, caption);
-          newDirNode.Data := TCustomNodeData.Create(path);
-          newDirNode.HasChildren := True;
+          newNode := tvwFiles.Items.AddChild(Node, caption);
+          newNode.Data := TCustomNodeData.Create(path);
+          newNode.HasChildren := True; // Marcar como expandible
         end;
       end;
 
+      // Añadir archivos como nodos hijos
       for f in files do
       begin
         path := f;
-        caption := ExtractFileName(ExcludeTrailingPathDelimiter(path));
+        caption := ExtractFileName(path);
 
         // Verificar si el nodo ya existe
         if not NodeHasChild(Node, caption) then
         begin
-          newFileNode := tvwFiles.Items.AddChild(Node, caption);
-          newFileNode.Data := TCustomNodeData.Create(path);
+          newNode := tvwFiles.Items.AddChild(Node, caption);
+          newNode.Data := TCustomNodeData.Create(path);
         end;
       end;
     end;
 
-    // Permitir expansión si todo ha ido bien
+    // Permitir expansión si todo fue exitoso
     AllowExpansion := True;
   except
+    on E: EInOutError do
+    begin
+      // Liberar memoria si ocurre un error
+      if Assigned(directories) then
+        directories.Free;
+      if Assigned(files) then
+        files.Free;
+
+      // Mostrar mensaje de error y prevenir la expansión
+      ShowError('Error al expandir el nodo: ' + E.Message);
+      AllowExpansion := False;
+    end;
     on E: Exception do
     begin
-      // Capturar excepciones inesperadas
-      MessageDlg('Error al expandir el nodo: ' + E.Message, mtError, [mbOK], 0);
-      AllowExpansion := False;  // Evitar expansión si hay un error
+      // Liberar memoria si ocurre un error
+      if Assigned(directories) then
+        directories.Free;
+      if Assigned(files) then
+        files.Free;
+
+      ShowError('Ocurrió un error inesperado al intentar expandir el nodo: ' + E.Message);
+      AllowExpansion := False;
     end;
   end;
+
+  // Liberar listas al finalizar, si no se liberaron previamente
+  directories.Free;
+  files.Free;
 end;
+
 
 // Función para verificar si un nodo hijo ya existe
 function TfrmMain.NodeHasChild(ParentNode: TTreeNode; const Caption: string): Boolean;
@@ -403,7 +427,5 @@ begin
     ChildNode := ChildNode.GetNextSibling; // Obtener el siguiente hermano del nodo
   end;
 end;
-
-
 
 end.

@@ -8,7 +8,7 @@ uses
 
 function GetSystemIcons(): UInt64;
 function GetDirectoryContents(const path: string; out directories: TList<string>;
-  out files: TList<string>): Boolean;
+  out files: TLIst<string>): Boolean;
 
 implementation
 
@@ -16,7 +16,7 @@ function GetSystemIcons(): UInt64;
 const
   shgfiFlags = SHGFI_SYSICONINDEX or SHGFI_SMALLICON;
 var
-  shFileInfo: TShFileInfo;
+  shFileInfo: TSHFileInfo;
 begin
   Result := SHGetFileInfo('', 0, shFileInfo, SizeOf(shFileInfo), shgfiFlags);
 
@@ -28,10 +28,8 @@ end;
 function GetDirectoryContents(const path: string; out directories: TList<string>;
   out files: TList<string>): Boolean;
 begin
-  directories := TList<string>.Create;  // Inicializamos como listas vacías
-  files := TList<string>.Create;
-
-  Result := False; // Asumimos que habrá un error, hasta que todo se procese correctamente
+  directories := TList<string>.Create();  // Inicializamos como listas vacías
+  files := TList<string>.Create();
 
   try
     // Verificar si el directorio existe
@@ -80,7 +78,6 @@ begin
       directories := nil;
       files := nil;
 
-      Result := False;
       raise Exception.CreateFmt('Error en la función GetDirectoryContents: %s', [E.Message]);
     end;
   end;
