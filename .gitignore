@@ -1,0 +1,53 @@
+# Archivos de configuración de IDE (RAD Studio / Delphi)
+*.dproj
+*.groupproj
+*.local
+*.identcache
+*.localhistory
+*.dsk
+*.ide
+
+# Archivos temporales
+*.~*
+*.bak
+*.bpl
+*.exe
+*.dcu
+*.dcu~
+*.obj
+*.lib
+*.pch
+*.res
+*.ilf
+*.log
+
+# Archivos de compilación
+./output/
+./bin/
+./debug/
+./release/
+./obj/
+./lib/
+./*.dcu
+./*.ilf
+./*.res
+./*.dcp
+./*.dcp
+*.dof
+*.map
+
+# Archivos de paquetes y librerías
+*.dpk
+*.dpl
+
+# Archivos de configuración específicos de Delphi
+*.rsm
+*.rpo
+
+# Archivos generados por el sistema operativo (Windows)
+Thumbs.db
+Desktop.ini
+
+# Archivos generados por el sistema de control de versiones
+*.vs
+*.vscode
